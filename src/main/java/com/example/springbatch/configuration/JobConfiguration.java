@@ -9,13 +9,23 @@ import org.springframework.batch.repeat.RepeatStatus;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import java.net.HttpURLConnection;
+import java.net.URI;
+import java.net.URL;
+
 @Configuration
 @EnableBatchProcessing
 public class JobConfiguration {
 
-    private JobBuilderFactory jobBuilderFactory;
+    private final JobBuilderFactory jobBuilderFactory;
 
-    private StepBuilderFactory stepBuilderFactory;
+    private final StepBuilderFactory stepBuilderFactory;
+
+    private static final String remoteUrl;
+
+    static {
+        remoteUrl = "http://localhost:8080/job/spring-batch/build?token=123456";
+    }
 
     public JobConfiguration(JobBuilderFactory jobBuilderFactory, StepBuilderFactory stepBuilderFactory) {
         this.jobBuilderFactory = jobBuilderFactory;
@@ -36,6 +46,18 @@ public class JobConfiguration {
         return stepBuilderFactory.get("step2")
                 .tasklet((stepContribution, chunkContext) -> {
                     System.out.println("Step Two Executed successfully");
+                    return RepeatStatus.FINISHED;
+                }).build();
+    }
+
+    @Bean
+    public Step step3(){
+        return stepBuilderFactory.get("step3")
+                .tasklet((stepContribution, chunkContext) -> {
+                    URL url = new URL(remoteUrl);
+                    HttpURLConnection con  = (HttpURLConnection) url.openConnection();
+                    System.out.println("Step Tiger Jenkins Jobs: " + con.getResponseCode());
+                    con.disconnect();
                     return RepeatStatus.FINISHED;
                 }).build();
     }
