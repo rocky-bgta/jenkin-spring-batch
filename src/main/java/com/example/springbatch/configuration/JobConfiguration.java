@@ -10,7 +10,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import java.net.HttpURLConnection;
-import java.net.URI;
 import java.net.URL;
 
 @Configuration
@@ -67,6 +66,7 @@ public class JobConfiguration {
         return jobBuilderFactory.get("helloWorldJob")
                 .start(step1())
                 .next(step2())
+                .next(step3())
                 .build();
     }
 }
