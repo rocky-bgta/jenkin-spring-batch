@@ -26,7 +26,16 @@ public class JobConfiguration {
     public Step step1(){
         return stepBuilderFactory.get("step1")
                 .tasklet((stepContribution, chunkContext) -> {
-                    System.out.println("Hello world!");
+                    System.out.println("Step One Execute successfully");
+                    return RepeatStatus.FINISHED;
+                }).build();
+    }
+
+    @Bean
+    public Step step2(){
+        return stepBuilderFactory.get("step2")
+                .tasklet((stepContribution, chunkContext) -> {
+                    System.out.println("Step Two Executed successfully");
                     return RepeatStatus.FINISHED;
                 }).build();
     }
@@ -35,6 +44,7 @@ public class JobConfiguration {
     public Job helloWorldJob(){
         return jobBuilderFactory.get("helloWorldJob")
                 .start(step1())
+                .next(step2())
                 .build();
     }
 }
