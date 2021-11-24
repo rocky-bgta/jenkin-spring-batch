@@ -25,7 +25,8 @@ public class JobConfiguration {
     private static final String remoteUrl;
 
     static {
-        remoteUrl = "http://localhost:8080/job/spring-batch/build?token=";
+        //remoteUrl = "http://localhost:8080/job/spring-batch/build?token=";
+        remoteUrl = "http://localhost:8080/job/spring-batch/buildWithParameters?branch=tuli&token";
     }
 
     public JobConfiguration(JobBuilderFactory jobBuilderFactory, StepBuilderFactory stepBuilderFactory) {
