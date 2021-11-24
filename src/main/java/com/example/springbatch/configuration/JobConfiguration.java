@@ -17,6 +17,7 @@ import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.Base64;
+import java.util.HashMap;
 import java.util.Map;
 
 @Configuration
@@ -24,22 +25,23 @@ import java.util.Map;
 public class JobConfiguration {
 
     private final JobBuilderFactory jobBuilderFactory;
-
     private final StepBuilderFactory stepBuilderFactory;
 
     private static final String remoteUrl;
+    private static final String jobName;
+    private static final String jobToken;
 
     @Value( "${userId}" )
     private String userId;
 
-    @Value( "${jenkinsToken}" )
+    @Value("${jenkinsToken}")
     private String jenkinsToken ;
 
     static {
-        //remoteUrl = "http://localhost:8080/job/spring-batch/build?token=";
-        remoteUrl = "http://localhost:8080/job/spring-batch/buildWithParameters?branch=tuli&token";
-
-       // "http://172.30.81.70:8080/job/DOS-1907/buildWithParameters?parameter1=tuli&parameter2=rocky&token=dos-1907
+        remoteUrl = "http://localhost:8080";
+        jobName = "spring-batch";
+        jobToken = "test-batch";
+       //"http://172.30.81.70:8080/job/DOS-1907/buildWithParameters?parameter1=tuli&parameter2=rocky&token=dos-1907
     }
 
     public JobConfiguration(JobBuilderFactory jobBuilderFactory, StepBuilderFactory stepBuilderFactory) {
@@ -67,9 +69,11 @@ public class JobConfiguration {
 
     @Bean
     public Step step3(){
+        Map<String,String> jobParameter = new HashMap<>();
+        jobParameter.put("branch","DOS");
         return stepBuilderFactory.get("step3")
                 .tasklet((stepContribution, chunkContext) -> {
-                    triggerJenkinsJob("test-batch");
+                    triggerJenkinsJob(buildUrl(remoteUrl,jobName,jobToken,jobParameter));
                     return RepeatStatus.FINISHED;
                 }).build();
     }
@@ -85,7 +89,16 @@ public class JobConfiguration {
 
     private URL buildUrl(String host, String jobName, String jobToken, Map<String,String> parameters)
             throws URISyntaxException, MalformedURLException {
-        URIBuilder uriBuilder = new URIBuilder(host+"/"+jobName);
+        String buildUrl;
+        StringBuilder builder = new StringBuilder();
+        buildUrl = builder.append(host)
+                .append("/job")
+                .append("/")
+                .append(jobName)
+                .append("/")
+                .append("buildWithParameters").toString();
+
+        URIBuilder uriBuilder = new URIBuilder(buildUrl);
         for (Map.Entry<String, String> entry : parameters.entrySet()) {
             uriBuilder.addParameter(entry.getKey(),entry.getValue());
         }
@@ -95,20 +108,15 @@ public class JobConfiguration {
     }
 
 
-    private static void triggerJenkinsJob(String token) throws IOException {
-        URL url = new URL(remoteUrl+token); // Jenkins URL localhost:8080, job named 'test'
-        String user = "salahin";
-        String pass = "11d062d7023e11765b4d8ee867b67904f9"; // password or API token
-        String authStr = user + ":" + pass;
+    private void triggerJenkinsJob(URL url) throws IOException {
+        String authStr = userId + ":" + jenkinsToken;
         String basicAuth = "Basic "+ Base64.getEncoder().encodeToString(authStr.getBytes("utf-8"));
-
         HttpURLConnection connection = (HttpURLConnection) url.openConnection();
         connection.setRequestProperty ("Authorization", basicAuth);
         connection.setRequestMethod("POST");
         connection.setDoOutput(true);
         connection.setRequestProperty("User-Agent", "Mozilla/5.0 (Windows NT 6.3; Win64; x64; rv:27.0) Gecko/20100101 Firefox/27.0.2 Waterfox/27.0");
         connection.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
-
         System.out.println("Step Tiger Jenkins Jobs: " + connection.getResponseCode());
         connection.disconnect();
     }
